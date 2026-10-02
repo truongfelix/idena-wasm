@@ -202,7 +202,7 @@ dependencies = [
 [[package]]
 name = "dynasm"
 version = "1.2.3"
-source = "git+https://github.com/ubiubi18/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
+source = "git+https://github.com/truongfelix/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
 dependencies = [
  "bitflags 1.3.2",
  "byteorder",
@@ -215,7 +215,7 @@ dependencies = [
 [[package]]
 name = "dynasmrt"
 version = "1.2.3"
-source = "git+https://github.com/ubiubi18/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
+source = "git+https://github.com/truongfelix/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
 dependencies = [
  "byteorder",
  "dynasm",
@@ -1133,7 +1133,7 @@ dependencies = [
 [[package]]
 name = "wasmer"
 version = "2.3.0"
-source = "git+https://github.com/ubiubi18/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
+source = "git+https://github.com/truongfelix/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
 dependencies = [
  "cfg-if",
  "indexmap 1.9.3",
@@ -1157,7 +1157,7 @@ dependencies = [
 [[package]]
 name = "wasmer-artifact"
 version = "2.3.0"
-source = "git+https://github.com/ubiubi18/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
+source = "git+https://github.com/truongfelix/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
 dependencies = [
  "enumset",
  "loupe",
@@ -1169,7 +1169,7 @@ dependencies = [
 [[package]]
 name = "wasmer-compiler"
 version = "2.3.0"
-source = "git+https://github.com/ubiubi18/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
+source = "git+https://github.com/truongfelix/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
 dependencies = [
  "enumset",
  "loupe",
@@ -1186,7 +1186,7 @@ dependencies = [
 [[package]]
 name = "wasmer-compiler-singlepass"
 version = "2.3.0"
-source = "git+https://github.com/ubiubi18/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
+source = "git+https://github.com/truongfelix/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
 dependencies = [
  "byteorder",
  "dynasm",
@@ -1204,7 +1204,7 @@ dependencies = [
 [[package]]
 name = "wasmer-derive"
 version = "2.3.0"
-source = "git+https://github.com/ubiubi18/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
+source = "git+https://github.com/truongfelix/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1214,7 +1214,7 @@ dependencies = [
 [[package]]
 name = "wasmer-engine"
 version = "2.3.0"
-source = "git+https://github.com/ubiubi18/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
+source = "git+https://github.com/truongfelix/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
 dependencies = [
  "backtrace",
  "enumset",
@@ -1236,7 +1236,7 @@ dependencies = [
 [[package]]
 name = "wasmer-engine-dylib"
 version = "2.3.0"
-source = "git+https://github.com/ubiubi18/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
+source = "git+https://github.com/truongfelix/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
 dependencies = [
  "cfg-if",
  "enum-iterator",
@@ -1261,7 +1261,7 @@ dependencies = [
 [[package]]
 name = "wasmer-engine-universal"
 version = "2.3.0"
-source = "git+https://github.com/ubiubi18/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
+source = "git+https://github.com/truongfelix/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
 dependencies = [
  "cfg-if",
  "enumset",
@@ -1280,7 +1280,7 @@ dependencies = [
 [[package]]
 name = "wasmer-engine-universal-artifact"
 version = "2.3.0"
-source = "git+https://github.com/ubiubi18/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
+source = "git+https://github.com/truongfelix/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
 dependencies = [
  "enum-iterator",
  "enumset",
@@ -1295,7 +1295,7 @@ dependencies = [
 [[package]]
 name = "wasmer-middlewares"
 version = "2.3.0"
-source = "git+https://github.com/ubiubi18/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
+source = "git+https://github.com/truongfelix/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
 dependencies = [
  "loupe",
  "wasmer",
@@ -1306,7 +1306,7 @@ dependencies = [
 [[package]]
 name = "wasmer-object"
 version = "2.3.0"
-source = "git+https://github.com/ubiubi18/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
+source = "git+https://github.com/truongfelix/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
 dependencies = [
  "object 0.28.4",
  "thiserror 1.0.69",
@@ -1317,7 +1317,7 @@ dependencies = [
 [[package]]
 name = "wasmer-types"
 version = "2.3.0"
-source = "git+https://github.com/ubiubi18/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
+source = "git+https://github.com/truongfelix/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
 dependencies = [
  "backtrace",
  "enum-iterator",
@@ -1332,7 +1332,7 @@ dependencies = [
 [[package]]
 name = "wasmer-vm"
 version = "2.3.0"
-source = "git+https://github.com/ubiubi18/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
+source = "git+https://github.com/truongfelix/wasmer?rev=45f9bccf49187be24874400067923abda4c037da#45f9bccf49187be24874400067923abda4c037da"
 dependencies = [
  "backtrace",
  "cc",
