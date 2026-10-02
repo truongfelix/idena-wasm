@@ -8,8 +8,8 @@ Static WebAssembly smart-contract runtime used by `idena-go` through
 `idena-wasm-binding`. It wraps a compatibility fork of Wasmer and is inspired
 by [CosmWasm wasmvm](https://github.com/CosmWasm/wasmvm).
 
-[![CI](https://github.com/ubiubi18/idena-wasm/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/ubiubi18/idena-wasm/actions/workflows/ci.yml)
-[![Build](https://github.com/ubiubi18/idena-wasm/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/ubiubi18/idena-wasm/actions/workflows/build.yml)
+[![CI](https://github.com/truongfelix/idena-wasm/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/truongfelix/idena-wasm/actions/workflows/ci.yml)
+[![Build](https://github.com/truongfelix/idena-wasm/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/truongfelix/idena-wasm/actions/workflows/build.yml)
 
 > This is a source and artifact-production repository, not a general Wasmer
 > distribution and not a standalone smart-contract application. There are no
@@ -19,7 +19,7 @@ by [CosmWasm wasmvm](https://github.com/CosmWasm/wasmvm).
 
 The crate targets Rust `1.97.0` and pins every Wasmer crate to commit
 `45f9bccf49187be24874400067923abda4c037da` in
-[`ubiubi18/wasmer`](https://github.com/ubiubi18/wasmer). The Go binding records
+[`truongfelix/wasmer`](https://github.com/truongfelix/wasmer). The Go binding records
 the exact idena-wasm and Wasmer revisions used for each checked-in archive.
 
 ### What was updated
