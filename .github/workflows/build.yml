@@ -48,26 +48,40 @@ jobs:
         with:
           toolchain: 1.97.0
           targets: ${{ matrix.target }}
-
-      - uses: Swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae # v2
+          components: llvm-tools
 
       - name: Install Windows GNU linker
         if: matrix.os == 'windows-2025'
         run: choco install -y mingw
 
       - name: Build
-        env:
-          MATRIX_TARGET: ${{ matrix.target }}
         run: |
-          if [[ -n "${MATRIX_TARGET}" ]]; then
-            cargo build --locked --release --all-features --target "${MATRIX_TARGET}"
-            output="target/${MATRIX_TARGET}/release/libidena_wasm.a"
-          else
-            cargo build --locked --release --all-features
-            output="target/release/libidena_wasm.a"
-          fi
-          cp "${output}" "${{ matrix.artifact_name }}"
+          scripts/build-binding-lib.sh "${{ matrix.target }}" "${{ matrix.artifact_name }}"
           openssl dgst -sha256 -r "${{ matrix.artifact_name }}" > "${{ matrix.artifact_name }}.sha256"
+          cat "${{ matrix.artifact_name }}.sha256"
+
+      # The Go binding links the library as built here: Go must accept it (1.26.11 and later refuse LTO sections) and
+      # the binding's library tests must pass with it, the only library in the binding's lib folder.
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version: 1.26.11
+          cache: false
+
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          repository: truongfelix/idena-wasm-binding
+          ref: 8045f385d40031aeed82673c8c1c7434357c9e60
+          path: binding
+
+      - name: Check with the Go binding
+        env:
+          GOTOOLCHAIN: local
+          CGO_ENABLED: '1'
+        run: |
+          rm binding/lib/*.a
+          cp "${{ matrix.artifact_name }}" binding/lib/
+          cd binding
+          go test -count=1 ./tests -skip 'TestStaticLibraryArtifactChecksums|TestWindowsStaticLibraryNativeDependencies'
 
       - name: Upload archive
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -79,3 +93,63 @@ jobs:
           if-no-files-found: error
           retention-days: 7
           compression-level: 0
+
+  # The libraries in idena-wasm-binding (lib/SHA256SUMS, built by ubiubi18/idena-wasm run 35934763212 from b686ed8)
+  # must come out of their source: the same build of b686ed8, with the runner's default Cargo folder, gives the same
+  # bytes (the libraries hold the dependencies' source paths, under the Cargo folder).
+  reproduce:
+    name: ${{ matrix.build }} from b686ed8 (published library)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - build: linux-x64
+            os: ubuntu-24.04
+            target: ''
+            sha256: 069a76fa8eb121ecf120ead2a7a7e2e40cf6ceb3d983dd37d0f475a9675d9eac
+          - build: linux-arm64
+            os: ubuntu-24.04-arm
+            target: ''
+            sha256: c9a57082ddba1341a24b99f92ed818b0b51ee98ae00c049ba8a384d18957001e
+          - build: macos-x64
+            os: macos-15-intel
+            target: x86_64-apple-darwin
+            sha256: 8991e4d8d1ab18d89c962903405a0f510b85305506eddef7a463318099416ca3
+          - build: macos-arm64
+            os: macos-15
+            target: aarch64-apple-darwin
+            sha256: d8d4f1bf2593840f5a2092b6967c16a5d3bd1a860cddbd6559a14e062d641eaf
+          - build: windows-x64
+            os: windows-2025
+            target: x86_64-pc-windows-gnu
+            sha256: 8da1eb88a045fbc2cd4448a89acb11d7ce16568768fe2d71f461644c82b5c3df
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ref: b686ed84d26b43dfa74ea12a0d3af1b120a50598
+
+      - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
+        with:
+          toolchain: 1.97.0
+          targets: ${{ matrix.target }}
+
+      - name: Install Windows GNU linker
+        if: matrix.os == 'windows-2025'
+        run: choco install -y mingw
+
+      - name: Build and compare
+        env:
+          MATRIX_TARGET: ${{ matrix.target }}
+          EXPECTED: ${{ matrix.sha256 }}
+        run: |
+          if [[ -n "${MATRIX_TARGET}" ]]; then
+            cargo build --locked --release --all-features --target "${MATRIX_TARGET}"
+            output="target/${MATRIX_TARGET}/release/libidena_wasm.a"
+          else
+            cargo build --locked --release --all-features
+            output="target/release/libidena_wasm.a"
+          fi
+          actual="$(openssl dgst -sha256 -r "${output}" | awk '{print $1}')"
+          echo "built ${actual}, published ${EXPECTED}"
+          [[ "${actual}" == "${EXPECTED}" ]]
