@@ -17,7 +17,7 @@ binding="$2"
 
 # Go 1.26.11 is the first to refuse LTO sections: an older Go would pass a library it should refuse.
 version="$(go env GOVERSION)"
-if ! printf '%s\n%s\n' go1.26.11 "${version}" | sort -C -V; then
+if [[ "${version}" != devel* ]] && ! printf '%s\n%s\n' go1.26.11 "${version}" | sort -C -V; then
   echo "${version} does not check LTO sections: use Go 1.26.11 or later" >&2
   exit 1
 fi
@@ -33,6 +33,13 @@ case "$(go env GOOS)/$(go env GOARCH)" in
     exit 1
     ;;
 esac
+
+# A library named for another platform is refused: under this platform's name it would not link, or link wrong.
+given="$(basename "${library}")"
+if [[ "${given}" == libidena_wasm_*.a && "${given}" != "${name}" ]]; then
+  echo "${given} is not this platform's library (${name})" >&2
+  exit 1
+fi
 
 copy="$(mktemp -d)"
 trap 'rm -rf "${copy}"' EXIT

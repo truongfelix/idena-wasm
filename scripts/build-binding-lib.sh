@@ -27,14 +27,15 @@ output="$(cd "$(dirname "$2")" && pwd)/$(basename "$2")"
 
 # Settings that change the bytes are not taken from the environment: the build is the repository's (Cargo.toml,
 # rust-toolchain.toml, .cargo/config.toml) and nothing else.
-for name in RUSTFLAGS CARGO_ENCODED_RUSTFLAGS RUSTC_WRAPPER RUSTC_WORKSPACE_WRAPPER RUSTC MACOSX_DEPLOYMENT_TARGET; do
+for name in RUSTFLAGS CARGO_ENCODED_RUSTFLAGS RUSTC_WRAPPER RUSTC_WORKSPACE_WRAPPER RUSTC RUSTC_BOOTSTRAP \
+  CARGO_INCREMENTAL MACOSX_DEPLOYMENT_TARGET; do
   if [[ -n "${!name:-}" ]]; then
     echo "${name} is set: unset it, the library must build from the repository's own settings" >&2
     exit 1
   fi
 done
 # The whole list is read (no grep -q: under pipefail an early exit would read as "none").
-set_vars="$(compgen -e | grep -E '^CARGO_BUILD_|^CARGO_PROFILE_|^CARGO_TARGET_.*_RUSTFLAGS$' || true)"
+set_vars="$(compgen -e | grep -E '^CARGO_BUILD_|^CARGO_PROFILE_|^CARGO_UNSTABLE_|^CARGO_TARGET_.*_(RUSTFLAGS|LINKER|AR)$' || true)"
 if [[ -n "${set_vars}" ]]; then
   echo "unset these, the library must build from the repository's own settings: ${set_vars//$'\n'/ }" >&2
   exit 1
@@ -77,6 +78,13 @@ case "$(uname -s)" in
     fi
     ;;
 esac
+
+for config in "${CARGO_HOME}/config.toml" "${CARGO_HOME}/config"; do
+  if [[ -e "${config}" ]]; then
+    echo "${config} would apply to the build: remove it" >&2
+    exit 1
+  fi
+done
 
 args=(--locked --release --all-features)
 built="${CARGO_TARGET_DIR}/release/libidena_wasm.a"
