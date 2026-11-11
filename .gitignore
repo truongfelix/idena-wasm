@@ -2,3 +2,5 @@ target
 node_modules/
 build/
 /.idea
+# Libraries built by scripts/build-binding-lib.sh into the checkout
+/libidena_wasm_*.a

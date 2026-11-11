@@ -102,7 +102,8 @@ jobs:
           openssl dgst -sha256 -r "${asset_name}" > "${asset_name}.sha256"
           echo "ASSET_NAME=${asset_name}" >> "$GITHUB_ENV"
 
-      # As in build.yml: Go 1.26.11 links the library and the binding's library tests pass with it.
+      # As in build.yml: Go 1.26.11 links the library and the binding's library tests pass with it
+      # (scripts/check-with-binding.sh, the binding at a fixed commit).
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
         with:
           go-version: 1.26.11
@@ -115,14 +116,7 @@ jobs:
           path: binding
 
       - name: Check with the Go binding
-        env:
-          GOTOOLCHAIN: local
-          CGO_ENABLED: '1'
-        run: |
-          rm binding/lib/*.a
-          cp "${ASSET_NAME}" binding/lib/
-          cd binding
-          go test -count=1 ./tests -skip 'TestStaticLibraryArtifactChecksums|TestWindowsStaticLibraryNativeDependencies'
+        run: scripts/check-with-binding.sh "${ASSET_NAME}" binding
 
       - name: Release
         uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
@@ -149,7 +143,8 @@ jobs:
           openssl dgst -sha256 -r "${asset_name}" > "${asset_name}.sha256"
           echo "ASSET_NAME=${asset_name}" >> "$GITHUB_ENV"
 
-      # As in build.yml: Go 1.26.11 links the library and the binding's library tests pass with it.
+      # As in build.yml: Go 1.26.11 links the library and the binding's library tests pass with it
+      # (scripts/check-with-binding.sh, the binding at a fixed commit).
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
         with:
           go-version: 1.26.11
@@ -162,14 +157,7 @@ jobs:
           path: binding
 
       - name: Check with the Go binding
-        env:
-          GOTOOLCHAIN: local
-          CGO_ENABLED: '1'
-        run: |
-          rm binding/lib/*.a
-          cp "${ASSET_NAME}" binding/lib/
-          cd binding
-          go test -count=1 ./tests -skip 'TestStaticLibraryArtifactChecksums|TestWindowsStaticLibraryNativeDependencies'
+        run: scripts/check-with-binding.sh "${ASSET_NAME}" binding
 
       - name: Release
         uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2

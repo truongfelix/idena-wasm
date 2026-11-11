@@ -7,8 +7,10 @@
 #   paths of the dependencies' sources (panic locations) into the library, and they sit under CARGO_HOME. With it, a
 #   build of the same commit for the same target gives the same bytes on any machine (measured on linux x64: the
 #   checkout's own folder does not show in the library). The folder must be the user's own and closed to others:
-#   cargo builds the sources it finds already unpacked there. The script refuses one that is a link or another user's;
-#   on Windows it cannot check the owner: build there only on a machine nobody else uses (the CI runners).
+#   cargo builds the sources it finds already unpacked there. The script refuses one that is a link or another user's
+#   (on a shared machine, the first user to build owns it). On Windows the folder is %USERPROFILE%\idena-cargo,
+#   private to the user: the same path on every CI runner, so a Windows build matches CI's only when built there.
+#   The script does not read the user's own Cargo settings (~/.cargo/config.toml).
 # - The library is built in the repository's own target folder, whatever CARGO_TARGET_DIR says.
 # - The LTO sections are removed (.llvmbc and .llvmcmd, Mach-O __LLVM): Rust's static libraries carry them, and Go
 #   1.26.11 and later refuse any cgo library that does ("disallowed LTO section"). The script checks that none is
@@ -26,7 +28,7 @@ cd "${repo}"
 export CARGO_TARGET_DIR="${repo}/target"
 
 case "$(uname -s)" in
-  MINGW* | MSYS* | CYGWIN*) export CARGO_HOME='C:\idena-cargo' ;;
+  MINGW* | MSYS* | CYGWIN*) export CARGO_HOME="${USERPROFILE}\idena-cargo" ;;
   *)
     export CARGO_HOME=/var/tmp/idena-cargo
     if [[ -L "${CARGO_HOME}" ]]; then
@@ -77,6 +79,7 @@ if [[ "${left}" != "0" ]]; then
   echo "${left} LTO sections left in the library" >&2
   exit 1
 fi
+chmod 644 "${stripped}"
 mv "${stripped}" "${output}"
 trap - EXIT
 rm -f "${sections}"
