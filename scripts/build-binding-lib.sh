@@ -29,12 +29,17 @@ output="$(cd "$(dirname "$2")" && pwd)/$(basename "$2")"
 # Settings that change the bytes are not taken from the environment: the build is the repository's (Cargo.toml,
 # rust-toolchain.toml, .cargo/config.toml) and nothing else.
 for name in RUSTFLAGS CARGO_ENCODED_RUSTFLAGS RUSTC_WRAPPER RUSTC_WORKSPACE_WRAPPER RUSTC RUSTC_BOOTSTRAP \
-  CARGO_INCREMENTAL MACOSX_DEPLOYMENT_TARGET RUSTUP_TOOLCHAIN __CARGO_DEFAULT_LIB_METADATA; do
+  MACOSX_DEPLOYMENT_TARGET RUSTUP_TOOLCHAIN __CARGO_DEFAULT_LIB_METADATA; do
   if [[ -n "${!name:-}" ]]; then
     echo "${name} is set: unset it, the library must build from the repository's own settings" >&2
     exit 1
   fi
 done
+# 0 (the CI toolchain action sets it) is what a release build does anyway.
+if [[ -n "${CARGO_INCREMENTAL:-}" && "${CARGO_INCREMENTAL}" != "0" ]]; then
+  echo "CARGO_INCREMENTAL=${CARGO_INCREMENTAL}: unset it, the library must build from the repository's own settings" >&2
+  exit 1
+fi
 # The whole list is read (no grep -q: under pipefail an early exit would read as "none").
 set_vars="$(compgen -e | grep -E '^CARGO_BUILD_|^CARGO_PROFILE_|^CARGO_UNSTABLE_|^CARGO_TARGET_.*_(RUSTFLAGS|LINKER|AR)$' || true)"
 if [[ -n "${set_vars}" ]]; then

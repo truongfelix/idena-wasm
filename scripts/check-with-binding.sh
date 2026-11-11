@@ -18,7 +18,7 @@ binding="$2"
 # Go 1.26.11 is the first to refuse LTO sections: an older Go would pass a library it should refuse.
 # The Go that links the library below (GOTOOLCHAIN=local), for this machine's own platform.
 export GOTOOLCHAIN=local
-unset GOOS GOARCH
+unset GOOS GOARCH GOFLAGS CGO_LDFLAGS CGO_CFLAGS CGO_CPPFLAGS CGO_CXXFLAGS
 version="$(go env GOVERSION)"
 if [[ "${version}" != devel* ]] && ! printf '%s\n%s\n' go1.26.11 "${version}" | sort -C -V; then
   echo "${version} does not check LTO sections: use Go 1.26.11 or later" >&2
