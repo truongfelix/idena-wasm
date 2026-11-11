@@ -3,10 +3,10 @@
 #   scripts/build-binding-lib.sh <rust target, or "" for the host> <output file>
 # Run it with Rust 1.97.0 and its llvm-tools component (rustup component add llvm-tools --toolchain 1.97.0).
 #
-# - CARGO_HOME is one fixed folder, /var/tmp/idena-cargo (C:\idena-cargo on Windows): rustc writes the absolute
-#   paths of the dependencies' sources (panic locations) into the library, and they sit under CARGO_HOME. With it, a
-#   build of the same commit for the same target gives the same bytes on any machine (measured on linux x64: the
-#   checkout's own folder does not show in the library). The folder must be the user's own and closed to others:
+# - CARGO_HOME is one fixed folder, /var/tmp/idena-cargo: rustc writes the absolute paths of the dependencies'
+#   sources (panic locations) into the library, and they sit under CARGO_HOME. With it, a build of the same commit for
+#   the same target gives the same bytes on any Linux or macOS machine (measured on linux x64: the checkout's own
+#   folder does not show in the library). The folder must be the user's own and closed to others:
 #   cargo builds the sources it finds already unpacked there. The script refuses one that is a link or another user's
 #   (on a shared machine, the first user to build owns it). On Windows the folder is %USERPROFILE%\idena-cargo,
 #   private to the user: the same path on every CI runner, so a Windows build matches CI's only when built there.
@@ -55,10 +55,12 @@ cargo build "${args[@]}"
 sysroot="$(rustc --print sysroot)"
 host="$(rustc -vV | sed -n 's/^host: //p')"
 tools="${sysroot}/lib/rustlib/${host}/bin"
-if [[ ! -x "${tools}/llvm-objcopy" && ! -x "${tools}/llvm-objcopy.exe" ]]; then
-  echo "llvm-objcopy not found in ${tools}: rustup component add llvm-tools" >&2
-  exit 1
-fi
+for tool in llvm-objcopy llvm-objdump; do
+  if [[ ! -x "${tools}/${tool}" && ! -x "${tools}/${tool}.exe" ]]; then
+    echo "${tool} not found in ${tools}: rustup component add llvm-tools" >&2
+    exit 1
+  fi
+done
 
 stripped="$(mktemp "${output}.XXXXXX")"
 sections="$(mktemp)"
