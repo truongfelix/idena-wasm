@@ -16,20 +16,23 @@ library="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
 binding="$2"
 
 # Go 1.26.11 is the first to refuse LTO sections: an older Go would pass a library it should refuse.
+# The Go that links the library below (GOTOOLCHAIN=local), for this machine's own platform.
+export GOTOOLCHAIN=local
+unset GOOS GOARCH
 version="$(go env GOVERSION)"
 if [[ "${version}" != devel* ]] && ! printf '%s\n%s\n' go1.26.11 "${version}" | sort -C -V; then
   echo "${version} does not check LTO sections: use Go 1.26.11 or later" >&2
   exit 1
 fi
 
-case "$(go env GOOS)/$(go env GOARCH)" in
+case "$(go env GOHOSTOS)/$(go env GOHOSTARCH)" in
   linux/amd64) name=libidena_wasm_linux_amd64.a ;;
   linux/arm64) name=libidena_wasm_linux_aarch64.a ;;
   darwin/amd64) name=libidena_wasm_darwin_amd64.a ;;
   darwin/arm64) name=libidena_wasm_darwin_arm64.a ;;
   windows/amd64) name=libidena_wasm_windows_amd64.a ;;
   *)
-    echo "no binding library for $(go env GOOS)/$(go env GOARCH)" >&2
+    echo "no binding library for $(go env GOHOSTOS)/$(go env GOHOSTARCH)" >&2
     exit 1
     ;;
 esac
@@ -47,4 +50,4 @@ trap 'rm -rf "${copy}"' EXIT
 (cd "${binding}" && tar -cf - --exclude=./.git --exclude='./lib/*.a' .) | (cd "${copy}" && tar -xf -)
 cp "${library}" "${copy}/lib/${name}"
 cd "${copy}"
-GOTOOLCHAIN=local CGO_ENABLED=1 go test -count=1 ./tests -skip 'TestStaticLibraryArtifactChecksums'
+CGO_ENABLED=1 go test -count=1 ./tests -skip 'TestStaticLibraryArtifactChecksums'

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds the static library the Go binding links (idena-wasm-binding lib/), for one Rust target, into OUTPUT.
 #   scripts/build-binding-lib.sh <rust target, or "" for the host> <output file>
-# It needs Rust 1.97.0 with its llvm-tools component (both in rust-toolchain.toml: rustup installs them).
+# It needs Rust 1.97.0 (rust-toolchain.toml) with its llvm-tools component: rustup component add llvm-tools.
 #
 # - CARGO_HOME is one fixed folder, /var/tmp/idena-cargo: rustc writes the absolute paths of the dependencies'
 #   sources (panic locations) into the library, and they sit under CARGO_HOME. With it, a build of the same commit for
@@ -12,7 +12,8 @@
 #   private to the user: the same path on every CI runner, so a Windows build matches CI's only when built there.
 #   Cargo settings from outside the repository are refused: a .cargo/config.toml in a folder above the checkout,
 #   and the environment variables that change the build.
-# - The library is built in the repository's own target folder, whatever CARGO_TARGET_DIR says.
+# - The library is built in the repository's own target/binding-lib, whatever CARGO_TARGET_DIR says (apart from a
+#   plain cargo build's, whose dependencies sit under another CARGO_HOME).
 # - The LTO sections are removed (.llvmbc and .llvmcmd, Mach-O __LLVM): Rust's static libraries carry them, and Go
 #   1.26.11 and later refuse any cgo library that does ("disallowed LTO section"). The script checks that none is
 #   left before it writes OUTPUT.
@@ -28,7 +29,7 @@ output="$(cd "$(dirname "$2")" && pwd)/$(basename "$2")"
 # Settings that change the bytes are not taken from the environment: the build is the repository's (Cargo.toml,
 # rust-toolchain.toml, .cargo/config.toml) and nothing else.
 for name in RUSTFLAGS CARGO_ENCODED_RUSTFLAGS RUSTC_WRAPPER RUSTC_WORKSPACE_WRAPPER RUSTC RUSTC_BOOTSTRAP \
-  CARGO_INCREMENTAL MACOSX_DEPLOYMENT_TARGET; do
+  CARGO_INCREMENTAL MACOSX_DEPLOYMENT_TARGET RUSTUP_TOOLCHAIN __CARGO_DEFAULT_LIB_METADATA; do
   if [[ -n "${!name:-}" ]]; then
     echo "${name} is set: unset it, the library must build from the repository's own settings" >&2
     exit 1
@@ -55,7 +56,7 @@ while :; do
   [[ "${dir}" == "/" || "${dir}" == "$(dirname "${dir}")" ]] && break
   dir="$(dirname "${dir}")"
 done
-export CARGO_TARGET_DIR="${repo}/target"
+export CARGO_TARGET_DIR="${repo}/target/binding-lib"
 
 case "$(uname -s)" in
   MINGW* | MSYS* | CYGWIN*) export CARGO_HOME="${USERPROFILE}\idena-cargo" ;;
@@ -109,9 +110,11 @@ for tool in llvm-objcopy llvm-objdump; do
   fi
 done
 
+stripped=""
+sections=""
+trap 'rm -f "${stripped}" "${sections}"' EXIT
 stripped="$(mktemp "${output}.XXXXXX")"
 sections="$(mktemp)"
-trap 'rm -f "${stripped}" "${sections}"' EXIT
 cp "${built}" "${stripped}"
 "${tools}/llvm-objcopy" \
   --remove-section=.llvmbc --remove-section=.llvmcmd \
