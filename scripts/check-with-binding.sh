@@ -3,8 +3,9 @@
 # sections) links it and the binding's library tests pass with it, the only library in the binding's lib folder.
 #   scripts/check-with-binding.sh <library> <idena-wasm-binding checkout>
 # It works on a temporary copy of the checkout, which it leaves as it was, and gives the library the name the Go
-# toolchain's platform links. It does not compare the binding's bindings.h with this commit's exported functions
-# (B-221). The workflows check the binding out at a fixed commit: move it with the binding when those change.
+# toolchain's platform links. It does not compare the binding's bindings.h with this commit's exported functions: a
+# changed function still links when no test calls it. The workflows check the binding out at a fixed commit: move it
+# with the binding when those functions change.
 set -euo pipefail
 
 if [[ $# -ne 2 ]]; then
@@ -13,6 +14,13 @@ if [[ $# -ne 2 ]]; then
 fi
 library="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
 binding="$2"
+
+# Go 1.26.11 is the first to refuse LTO sections: an older Go would pass a library it should refuse.
+version="$(go env GOVERSION)"
+if ! printf '%s\n%s\n' go1.26.11 "${version}" | sort -C -V; then
+  echo "${version} does not check LTO sections: use Go 1.26.11 or later" >&2
+  exit 1
+fi
 
 case "$(go env GOOS)/$(go env GOARCH)" in
   linux/amd64) name=libidena_wasm_linux_amd64.a ;;

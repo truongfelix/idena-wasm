@@ -1,0 +1,29 @@
+name: Check with the Go binding
+description: >-
+  Go 1.26.11 links a library built by scripts/build-binding-lib.sh and the binding's library tests pass with it
+  (scripts/check-with-binding.sh), the binding at a fixed commit: move it with the binding when the library's exported
+  functions change.
+inputs:
+  library:
+    description: The library to check
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+      with:
+        go-version: 1.26.11
+        cache: false
+
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      with:
+        repository: truongfelix/idena-wasm-binding
+        ref: 8045f385d40031aeed82673c8c1c7434357c9e60
+        path: binding
+        persist-credentials: false
+
+    - name: Run the binding's tests with the library
+      shell: bash
+      env:
+        LIBRARY: ${{ inputs.library }}
+      run: scripts/check-with-binding.sh "${LIBRARY}" binding
