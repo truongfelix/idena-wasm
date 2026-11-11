@@ -1,8 +1,9 @@
 name: Reproduce the published libraries
 
 # Started by hand: rebuilds b686ed8, the commit the libraries in idena-wasm-binding were built from (lib/SHA256SUMS,
-# ubiubi18/idena-wasm run 35934763212 of "Build"), with the same workflow steps, and compares each library with the
-# published checksum.
+# ubiubi18/idena-wasm run 35934763212 of "Build"), with that run's build steps (without its cache, which does not
+# change the bytes), and compares each library with the published checksum. It needs ubiubi18/wasmer, which b686ed8
+# fetches Wasmer from.
 on:
   workflow_dispatch:
 

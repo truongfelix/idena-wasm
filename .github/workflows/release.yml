@@ -101,6 +101,29 @@ jobs:
           scripts/build-binding-lib.sh "${MATRIX_TARGET}" "${asset_name}"
           openssl dgst -sha256 -r "${asset_name}" > "${asset_name}.sha256"
           echo "ASSET_NAME=${asset_name}" >> "$GITHUB_ENV"
+
+      # As in build.yml: Go 1.26.11 links the library and the binding's library tests pass with it.
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version: 1.26.11
+          cache: false
+
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          repository: truongfelix/idena-wasm-binding
+          ref: 8045f385d40031aeed82673c8c1c7434357c9e60
+          path: binding
+
+      - name: Check with the Go binding
+        env:
+          GOTOOLCHAIN: local
+          CGO_ENABLED: '1'
+        run: |
+          rm binding/lib/*.a
+          cp "${ASSET_NAME}" binding/lib/
+          cd binding
+          go test -count=1 ./tests -skip 'TestStaticLibraryArtifactChecksums|TestWindowsStaticLibraryNativeDependencies'
+
       - name: Release
         uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
         with:
@@ -125,6 +148,29 @@ jobs:
           scripts/build-binding-lib.sh "" "${asset_name}"
           openssl dgst -sha256 -r "${asset_name}" > "${asset_name}.sha256"
           echo "ASSET_NAME=${asset_name}" >> "$GITHUB_ENV"
+
+      # As in build.yml: Go 1.26.11 links the library and the binding's library tests pass with it.
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version: 1.26.11
+          cache: false
+
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          repository: truongfelix/idena-wasm-binding
+          ref: 8045f385d40031aeed82673c8c1c7434357c9e60
+          path: binding
+
+      - name: Check with the Go binding
+        env:
+          GOTOOLCHAIN: local
+          CGO_ENABLED: '1'
+        run: |
+          rm binding/lib/*.a
+          cp "${ASSET_NAME}" binding/lib/
+          cd binding
+          go test -count=1 ./tests -skip 'TestStaticLibraryArtifactChecksums|TestWindowsStaticLibraryNativeDependencies'
+
       - name: Release
         uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
         with:
