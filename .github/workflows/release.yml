@@ -50,8 +50,6 @@ jobs:
 
   release:
     needs: preflight
-    env:
-      BINARY_NAME: libidena_wasm.a
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -80,39 +78,27 @@ jobs:
         if: matrix.target == ''
         with:
           toolchain: 1.97.0
+          components: llvm-tools
 
       - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
         if: matrix.target != ''
         with:
           toolchain: 1.97.0
           targets: ${{ matrix.target }}
+          components: llvm-tools
 
       - name: Install Windows GNU linker
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2025'
         run: choco install -y mingw
 
+      # The same build as build.yml (scripts/build-binding-lib.sh: fixed Cargo folder, no LTO sections).
       - name: Build
-        env:
-          MATRIX_TARGET: ${{ matrix.target }}
-        run: |
-          target="${MATRIX_TARGET}"
-          if [[ -n "${target}" ]]; then
-            cargo build --locked --release --all-features --target "${target}"
-          else
-            cargo build --locked --release --all-features
-          fi
-
-      - name: Rename output file
         env:
           MATRIX_ARTIFACT_NAME: ${{ matrix.artifact_name }}
           MATRIX_TARGET: ${{ matrix.target }}
         run: |
           asset_name="${MATRIX_ARTIFACT_NAME}"
-          if [[ -n "${MATRIX_TARGET}" ]]; then
-            mv "target/${MATRIX_TARGET}/release/${BINARY_NAME}" "${asset_name}"
-          else
-            mv "target/release/${BINARY_NAME}" "${asset_name}"
-          fi
+          scripts/build-binding-lib.sh "${MATRIX_TARGET}" "${asset_name}"
           openssl dgst -sha256 -r "${asset_name}" > "${asset_name}.sha256"
           echo "ASSET_NAME=${asset_name}" >> "$GITHUB_ENV"
       - name: Release
@@ -127,20 +113,16 @@ jobs:
     needs: preflight
     name: Linux aarch64
     runs-on: ubuntu-24.04-arm
-    env:
-      BINARY_NAME: libidena_wasm.a
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
       - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
         with:
           toolchain: 1.97.0
-      - uses: Swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae # v2
-      - name: Build idena-wasm binary
-        run: cargo build --locked --release --all-features
-      - name: Rename output file
+          components: llvm-tools
+      - name: Build
         run: |
           asset_name=libidena_wasm_linux_aarch64.a
-          cp "target/release/${BINARY_NAME}" "${asset_name}"
+          scripts/build-binding-lib.sh "" "${asset_name}"
           openssl dgst -sha256 -r "${asset_name}" > "${asset_name}.sha256"
           echo "ASSET_NAME=${asset_name}" >> "$GITHUB_ENV"
       - name: Release
