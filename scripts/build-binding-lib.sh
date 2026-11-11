@@ -10,7 +10,8 @@
 #   cargo builds the sources it finds already unpacked there. The script refuses one that is a link or another user's
 #   (on a shared machine, the first user to build owns it). On Windows the folder is %USERPROFILE%\idena-cargo,
 #   private to the user: the same path on every CI runner, so a Windows build matches CI's only when built there.
-#   The script does not read the user's own Cargo settings (~/.cargo/config.toml).
+#   Cargo settings from outside the repository are refused: a .cargo/config.toml in a folder above the checkout,
+#   and the environment variables that change the build.
 # - The library is built in the repository's own target folder, whatever CARGO_TARGET_DIR says.
 # - The LTO sections are removed (.llvmbc and .llvmcmd, Mach-O __LLVM): Rust's static libraries carry them, and Go
 #   1.26.11 and later refuse any cgo library that does ("disallowed LTO section"). The script checks that none is
@@ -26,18 +27,33 @@ output="$(cd "$(dirname "$2")" && pwd)/$(basename "$2")"
 
 # Settings that change the bytes are not taken from the environment: the build is the repository's (Cargo.toml,
 # rust-toolchain.toml, .cargo/config.toml) and nothing else.
-for name in RUSTFLAGS CARGO_ENCODED_RUSTFLAGS CARGO_BUILD_RUSTFLAGS RUSTC_WRAPPER RUSTC_WORKSPACE_WRAPPER RUSTC; do
+for name in RUSTFLAGS CARGO_ENCODED_RUSTFLAGS RUSTC_WRAPPER RUSTC_WORKSPACE_WRAPPER RUSTC MACOSX_DEPLOYMENT_TARGET; do
   if [[ -n "${!name:-}" ]]; then
     echo "${name} is set: unset it, the library must build from the repository's own settings" >&2
     exit 1
   fi
 done
-if compgen -e | grep -qE '^CARGO_PROFILE_|^CARGO_TARGET_.*_RUSTFLAGS$'; then
-  echo "a CARGO_PROFILE_* or CARGO_TARGET_*_RUSTFLAGS variable is set: unset it" >&2
+# The whole list is read (no grep -q: under pipefail an early exit would read as "none").
+set_vars="$(compgen -e | grep -E '^CARGO_BUILD_|^CARGO_PROFILE_|^CARGO_TARGET_.*_RUSTFLAGS$' || true)"
+if [[ -n "${set_vars}" ]]; then
+  echo "unset these, the library must build from the repository's own settings: ${set_vars//$'\n'/ }" >&2
   exit 1
 fi
 repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${repo}"
+# Cargo also reads .cargo/config.toml in every folder above the checkout (~/.cargo included when the checkout is
+# under the home folder): none may hold one.
+dir="$(dirname "${repo}")"
+while :; do
+  for config in "${dir}/.cargo/config.toml" "${dir}/.cargo/config"; do
+    if [[ -e "${config}" ]]; then
+      echo "${config} would apply to the build: build from a checkout outside its folder" >&2
+      exit 1
+    fi
+  done
+  [[ "${dir}" == "/" || "${dir}" == "$(dirname "${dir}")" ]] && break
+  dir="$(dirname "${dir}")"
+done
 export CARGO_TARGET_DIR="${repo}/target"
 
 case "$(uname -s)" in

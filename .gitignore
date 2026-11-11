@@ -4,3 +4,6 @@ build/
 /.idea
 # Libraries built by scripts/build-binding-lib.sh into the checkout
 /libidena_wasm_*.a
+/libidena_wasm_*.a.sha256
+# The binding checkout the library check uses (.github/actions/check-with-binding)
+/binding/

@@ -61,6 +61,10 @@ jobs:
             os: ubuntu-24.04
             artifact_name: 'libidena_wasm_linux_amd64.a'
             target: ''
+          - build: linux-arm64
+            os: ubuntu-24.04-arm
+            artifact_name: 'libidena_wasm_linux_aarch64.a'
+            target: ''
           - build: macos-x64
             os: macos-15-intel
             artifact_name: 'libidena_wasm_darwin_amd64.a'
@@ -79,13 +83,6 @@ jobs:
           persist-credentials: false
 
       - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
-        if: matrix.target == ''
-        with:
-          toolchain: 1.97.0
-          components: llvm-tools
-
-      - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
-        if: matrix.target != ''
         with:
           toolchain: 1.97.0
           targets: ${{ matrix.target }}
@@ -103,38 +100,6 @@ jobs:
         run: |
           asset_name="${MATRIX_ARTIFACT_NAME}"
           scripts/build-binding-lib.sh "${MATRIX_TARGET}" "${asset_name}"
-          openssl dgst -sha256 -r "${asset_name}" > "${asset_name}.sha256"
-          echo "ASSET_NAME=${asset_name}" >> "$GITHUB_ENV"
-
-      # Go 1.26.11 links the library and the Go binding's library tests pass with it.
-      - uses: ./.github/actions/check-with-binding
-        with:
-          library: ${{ env.ASSET_NAME }}
-
-      - name: Release
-        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: |
-            ${{ env.ASSET_NAME }}
-            ${{ env.ASSET_NAME }}.sha256
-
-  linux_aarch64:
-    needs: preflight
-    name: Linux aarch64
-    runs-on: ubuntu-24.04-arm
-    steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
-        with:
-          persist-credentials: false
-      - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
-        with:
-          toolchain: 1.97.0
-          components: llvm-tools
-      - name: Build
-        run: |
-          asset_name=libidena_wasm_linux_aarch64.a
-          scripts/build-binding-lib.sh "" "${asset_name}"
           openssl dgst -sha256 -r "${asset_name}" > "${asset_name}.sha256"
           echo "ASSET_NAME=${asset_name}" >> "$GITHUB_ENV"
 
