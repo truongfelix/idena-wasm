@@ -74,9 +74,19 @@ cargo test --locked --all-targets --all-features
 cargo build --locked --release --all-features
 ```
 
-The native archive is written to `target/release/libidena_wasm.a`. Use the
-GitHub build matrix for release artifacts instead of copying one host's archive
-to another platform.
+`cargo build` writes the raw archive to `target/release/libidena_wasm.a`. The
+archive the Go binding links is built with `scripts/build-binding-lib.sh <rust
+target, or "" for the host> <output>`: it removes the LTO sections (Go 1.26.11
+and later refuse a cgo library that carries them) and builds with a fixed Cargo
+folder, so that the same commit gives the same bytes on another machine
+(measured on Linux x64; on Windows the folder is in the user's profile, so a
+Windows build matches CI's only on a CI runner). It needs the `llvm-tools`
+component: `rustup component add llvm-tools`. `scripts/check-with-binding.sh <library>
+<idena-wasm-binding checkout>` then runs the binding's tests with it, on a copy
+of the checkout. Use the GitHub
+build matrix (`build.yml`) for release artifacts instead of copying one host's
+archive to another platform; `reproduce.yml` rebuilds the commit the published
+archives came from and compares their checksums.
 
 ## Artifact flow
 

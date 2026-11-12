@@ -43,13 +43,14 @@ jobs:
             target: x86_64-pc-windows-gnu
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          persist-credentials: false
 
       - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
         with:
           toolchain: 1.97.0
           targets: ${{ matrix.target }}
-
-      - uses: Swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae # v2
+          components: llvm-tools
 
       - name: Install Windows GNU linker
         if: matrix.os == 'windows-2025'
@@ -58,16 +59,16 @@ jobs:
       - name: Build
         env:
           MATRIX_TARGET: ${{ matrix.target }}
+          MATRIX_ARTIFACT_NAME: ${{ matrix.artifact_name }}
         run: |
-          if [[ -n "${MATRIX_TARGET}" ]]; then
-            cargo build --locked --release --all-features --target "${MATRIX_TARGET}"
-            output="target/${MATRIX_TARGET}/release/libidena_wasm.a"
-          else
-            cargo build --locked --release --all-features
-            output="target/release/libidena_wasm.a"
-          fi
-          cp "${output}" "${{ matrix.artifact_name }}"
-          openssl dgst -sha256 -r "${{ matrix.artifact_name }}" > "${{ matrix.artifact_name }}.sha256"
+          scripts/build-binding-lib.sh "${MATRIX_TARGET}" "${MATRIX_ARTIFACT_NAME}"
+          openssl dgst -sha256 -r "${MATRIX_ARTIFACT_NAME}" > "${MATRIX_ARTIFACT_NAME}.sha256"
+          cat "${MATRIX_ARTIFACT_NAME}.sha256"
+
+      # Go 1.26.11 links the library and the Go binding's library tests pass with it.
+      - uses: ./.github/actions/check-with-binding
+        with:
+          library: ${{ matrix.artifact_name }}
 
       - name: Upload archive
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
