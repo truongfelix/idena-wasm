@@ -17,6 +17,9 @@
 # - The LTO sections are removed (.llvmbc and .llvmcmd, Mach-O __LLVM): Rust's static libraries carry them, and Go
 #   1.26.11 and later refuse any cgo library that does ("disallowed LTO section"). The script checks that none is
 #   left before it writes OUTPUT.
+# - On Windows, rustc builds the import libraries of the raw-dylib DLLs (dbghelp, kernel32) in a temporary folder
+#   with a random name, target/.../release/deps/rustcXXXXXX, and that name lands in their symbols: two builds of the
+#   same commit never had the same bytes. The script sets it to rustc000000, the same length, in every symbol.
 set -euo pipefail
 
 if [[ $# -ne 2 ]]; then
@@ -138,6 +141,18 @@ if [[ "${left}" != "0" ]]; then
   echo "${left} LTO sections left in the library" >&2
   exit 1
 fi
+# The random folder names (see the top): each is set to 000000, and none may be left.
+names="$(LC_ALL=C grep -aoE '_release_deps_rustc[A-Za-z0-9]{6}_' "${stripped}" | sort -u || true)"
+for name in ${names}; do
+  random="${name:19:6}"
+  [[ "${random}" == 000000 ]] && continue
+  perl -0777 -pi -e "s/_release_deps_rustc${random}_/_release_deps_rustc000000_/g" "${stripped}"
+  if LC_ALL=C grep -aq "rustc${random}" "${stripped}"; then
+    echo "the temporary folder name rustc${random} is left in the library" >&2
+    exit 1
+  fi
+done
+echo "temporary folder names set to rustc000000: $({ LC_ALL=C grep -ao '_release_deps_rustc000000_' "${stripped}" || true; } | wc -l) symbol(s)"
 chmod 644 "${stripped}"
 mv "${stripped}" "${output}"
 trap - EXIT
