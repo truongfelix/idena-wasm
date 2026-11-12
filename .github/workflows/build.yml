@@ -54,7 +54,7 @@ jobs:
 
       - name: Install Windows GNU linker
         if: matrix.os == 'windows-2025'
-        run: choco install -y mingw
+        run: choco install -y mingw --version=16.1.0
 
       - name: Build
         env:
