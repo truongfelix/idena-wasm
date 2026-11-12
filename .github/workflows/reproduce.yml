@@ -43,6 +43,9 @@ jobs:
             os: windows-2025
             target: x86_64-pc-windows-gnu
             sha256: 8da1eb88a045fbc2cd4448a89acb11d7ce16568768fe2d71f461644c82b5c3df
+            # rustc builds the import libraries of its raw-dylib DLLs in a temporary folder with a random name
+            # (target/.../deps/rustcXXXXXX), and that name ends up in their symbols; the published build's was this.
+            rustc_tmp: Ee1o3d
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
@@ -62,6 +65,7 @@ jobs:
         env:
           MATRIX_TARGET: ${{ matrix.target }}
           EXPECTED: ${{ matrix.sha256 }}
+          RUSTC_TMP: ${{ matrix.rustc_tmp }}
         run: |
           if [[ -n "${MATRIX_TARGET}" ]]; then
             cargo build --locked --release --all-features --target "${MATRIX_TARGET}"
@@ -69,6 +73,10 @@ jobs:
           else
             cargo build --locked --release --all-features
             output="target/release/libidena_wasm.a"
+          fi
+          if [[ -n "${RUSTC_TMP}" ]]; then
+            echo "random folder names in this build: $(grep -aoE '_release_deps_rustc[A-Za-z0-9]{6}_' "${output}" | sort | uniq -c)"
+            perl -0777 -pi -e "s/(_release_deps_rustc)[A-Za-z0-9]{6}_/\${1}${RUSTC_TMP}_/g" "${output}"
           fi
           actual="$(openssl dgst -sha256 -r "${output}" | awk '{print $1}')"
           echo "built ${actual}, published ${EXPECTED}"
